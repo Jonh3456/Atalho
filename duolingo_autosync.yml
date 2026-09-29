@@ -1,0 +1,33 @@
+name: Duolingo Autosync (English Journey)
+
+# Roda sozinho, todos os dias, sem precisar que ninguém abra o app.
+# Ajuste os horários (UTC) conforme preferir — o Brasil (horário de
+# Brasília) está 3h atrás do UTC, então "22:30 UTC" = 19:30 no Brasil.
+on:
+  schedule:
+    - cron: "30 22 * * *"   # todo dia às 19:30 (horário de Brasília)
+    - cron: "30 2 * * *"    # e de madrugada, às 23:30 (horário de Brasília) — 2ª checagem de segurança
+  workflow_dispatch: {}       # permite rodar manualmente em Actions > Run workflow
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependências
+        run: pip install pandas openpyxl requests
+
+      - name: Rodar sincronização com Duolingo
+        env:
+          GITHUB_TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
+          GITHUB_REPO: ${{ secrets.GITHUB_REPO }}
+          GITHUB_BRANCH: ${{ secrets.GITHUB_BRANCH }}
+          GITHUB_FILE_PATH: ${{ secrets.GITHUB_FILE_PATH }}
+        run: python duolingo_autosync.py
