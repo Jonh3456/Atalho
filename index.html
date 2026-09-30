@@ -1,10 +1,190 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"><title>English Journey - Atalho</title><meta name="theme-color" content="#2563eb"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="EJ Atalho"><link rel="manifest" href="./manifest.json"><link rel="apple-touch-icon" href="./icons/icon-192.png"><link rel="icon" href="./icons/icon-192.png"><script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>English Journey - Atalho</title>
+<meta name="theme-color" content="#2563eb" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="EJ Atalho" />
+<link rel="manifest" href="./manifest.json" />
+<link rel="apple-touch-icon" href="./icons/icon-192.png" />
+<link rel="icon" href="./icons/icon-192.png" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{--bg:#0f172a;--card:#1e293b;--card-border:#334155;--blue:#2563eb;--blue-dark:#1d4ed8;--green:#16a34a;--red:#dc2626;--amber:#d97706;--text:#e2e8f0;--text-dim:#94a3b8}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;min-height:100vh;background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;padding:env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 16px);display:flex;flex-direction:column}header{display:flex;align-items:center;gap:12px;padding:20px 4px 12px}header img{width:44px;height:44px;border-radius:12px}header h1{font-size:18px;margin:0;font-weight:700}header p{margin:2px 0 0;font-size:12px;color:var(--text-dim)}.gear{margin-left:auto;background:var(--card);border:1px solid var(--card-border);border-radius:12px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer}.status-banner{border-radius:14px;padding:10px 14px;font-size:13px;margin-bottom:12px;display:none}.status-banner.show{display:block}.status-banner.warn{background:rgba(217,119,6,.15);border:1px solid var(--amber);color:#fbbf24}.status-banner.err{background:rgba(220,38,38,.15);border:1px solid var(--red);color:#fca5a5}.status-banner.ok{background:rgba(22,163,74,.15);border:1px solid var(--green);color:#86efac}#screen-config,#screen-main{display:none}.field{margin-bottom:14px}.field label{display:block;font-size:13px;color:var(--text-dim);margin-bottom:6px}.field input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--card-border);background:var(--card);color:var(--text);font-size:15px}.field small{display:block;color:var(--text-dim);font-size:11px;margin-top:4px}.btn{display:block;width:100%;padding:14px;border-radius:14px;border:none;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px}.btn-primary{background:var(--blue);color:#fff}.btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--card-border)}.btn-danger{background:transparent;color:var(--red);border:1px solid var(--red)}.shortcut-list{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}.shortcut-row{display:flex;gap:8px;align-items:center;background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:8px}.shortcut-row input[type=text]{flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--card-border);background:#0f172a;color:var(--text);font-size:13px}.shortcut-row .emoji-input{width:52px;text-align:center;flex:0 0 52px}.shortcut-row .remove-btn{background:none;border:none;color:var(--red);font-size:18px;padding:4px 8px}.cards{display:flex;flex-direction:column;gap:14px;margin-top:4px}.task-card{background:var(--card);border:1px solid var(--card-border);border-radius:18px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:transform .08s,background .15s;user-select:none}.task-card:active{transform:scale(.97);background:#243449}.task-card .emoji{font-size:32px;width:48px;text-align:center}.task-card .info{flex:1;min-width:0}.task-card .label{font-size:16px;font-weight:700}.task-card .chev{font-size:22px;color:var(--text-dim)}.task-card.loading .chev{animation:spin .8s linear infinite}.pending-status{margin-top:5px;font-size:12px;font-weight:600}.pending-description{margin-top:3px;color:var(--text-dim);font-size:11px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.task-card.atrasada{border-left:4px solid #ef4444}.task-card.atrasada .pending-status{color:#fca5a5}.task-card.hoje{border-left:4px solid #f59e0b}.task-card.hoje .pending-status{color:#fbbf24}.task-card.futura{border-left:4px solid #3b82f6}.task-card.futura .pending-status{color:#93c5fd}.task-card.sem-pendencia{border-left:4px solid #22c55e;opacity:.78}.task-card.sem-pendencia .pending-status{color:#86efac}.task-card.erro-consulta{border-left:4px solid #64748b}.refresh-pendencias{width:100%;display:flex;align-items:center;justify-content:center;gap:7px;margin:2px 0 12px;padding:10px 14px;border:1px solid var(--card-border);border-radius:12px;background:rgba(30,41,59,.65);color:var(--text-dim);font-size:12px}.refresh-pendencias.loading span{display:inline-block;animation:spin .8s linear infinite}.footer-note{margin-top:auto;padding-top:20px;font-size:11px;color:var(--text-dim);text-align:center;line-height:1.5}.pending-queue{background:rgba(217,119,6,.12);border:1px solid var(--amber);border-radius:14px;padding:12px 14px;margin-bottom:14px;font-size:13px}.spinner-overlay{position:fixed;inset:0;background:rgba(15,23,42,.75);display:none;align-items:center;justify-content:center;z-index:50}.spinner-overlay.show{display:flex}.spinner{width:44px;height:44px;border:4px solid rgba(255,255,255,.2);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;z-index:60}.modal-overlay.show{display:flex}.modal{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:22px;border:1px solid var(--card-border);border-bottom:none}.modal h3{margin:0 0 10px}.modal p{color:var(--text-dim);font-size:14px;line-height:1.5}.modal .actions{display:flex;gap:10px;margin-top:16px}.modal .actions .btn{margin-top:0}
-</style></head><body>
-<header><img src="./icons/icon-192.png" alt=""><div><h1>Atalho English Journey</h1><p id="header-sub">toque para marcar como feito</p></div><div class="gear" id="btn-open-config">⚙️</div></header>
-<div id="banner" class="status-banner"></div><div id="pending-queue-box" class="pending-queue" style="display:none"><div id="pending-queue-text"></div><button class="btn btn-secondary" id="btn-retry-queue">🔄 Tentar sincronizar agora</button></div>
-<div id="screen-main"><button class="refresh-pendencias" id="btn-refresh-pendencias" type="button"><span>🔄</span> Atualizar pendências</button><div class="cards" id="cards-container"></div><div class="footer-note">Confira a atividade indicada em cada card antes de marcar como concluída.<br>Precisa de internet para sincronizar com o GitHub.</div></div>
-<div id="screen-config"><div class="field"><label>Token do GitHub (Personal Access Token)</label><input type="password" id="cfg-token" placeholder="github_pat_xxxxxxxxx"><small>Use um token fine-grained com acesso somente ao repositório de dados e Contents: Read and write.</small></div><div class="field"><label>Repositório (owner/nome)</label><input type="text" id="cfg-repo" placeholder="seu-usuario/english-dashboard-data"></div><div class="field"><label>Branch</label><input type="text" id="cfg-branch" value="main"></div><div class="field"><label>Caminho do arquivo Excel</label><input type="text" id="cfg-path" placeholder="data/estudo_ingles_dados.xlsx"></div><div class="field"><label>Usuário no English Journey</label><input type="text" id="cfg-usuario" placeholder="Darlei"><small>Deve ser exatamente igual ao cadastro na aba Usuarios.</small></div><div class="field"><label>Atalhos</label><div class="shortcut-list" id="shortcut-list"></div><button class="btn btn-secondary" id="btn-add-shortcut" type="button">+ Adicionar atalho</button></div><button class="btn btn-primary" id="btn-save-config">💾 Salvar configuração</button><button class="btn btn-secondary" id="btn-cancel-config" style="display:none">Voltar</button><button class="btn btn-danger" id="btn-reset-config">Apagar configuração deste aparelho</button></div>
-<div class="spinner-overlay" id="spinner-overlay"><div class="spinner"></div></div><div class="modal-overlay" id="modal-overlay"><div class="modal"><h3 id="modal-title"></h3><p id="modal-body"></p><div class="actions"><button class="btn btn-secondary" id="modal-cancel" style="flex:1">Cancelar</button><button class="btn btn-primary" id="modal-confirm" style="flex:1">Confirmar</button></div></div></div><script src="./app.js"></script></body></html>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card-border: #334155;
+    --blue: #2563eb;
+    --blue-dark: #1d4ed8;
+    --green: #16a34a;
+    --red: #dc2626;
+    --amber: #d97706;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; min-height: 100vh; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    padding: env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 16px) 16px;
+    display: flex; flex-direction: column; align-items: stretch;
+  }
+  header { display:flex; align-items:center; gap:12px; padding: 20px 4px 12px 4px; }
+  header img { width: 44px; height: 44px; border-radius: 12px; }
+  header h1 { font-size: 18px; margin: 0; font-weight: 700; }
+  header p { margin: 2px 0 0 0; font-size: 12px; color: var(--text-dim); }
+  .gear { margin-left: auto; background: var(--card); border: 1px solid var(--card-border); border-radius: 12px;
+          width: 42px; height: 42px; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; }
+
+  .status-banner { border-radius: 14px; padding: 10px 14px; font-size: 13px; margin-bottom: 12px; display:none; }
+  .status-banner.show { display:block; }
+  .status-banner.warn { background: rgba(217,119,6,0.15); border: 1px solid var(--amber); color: #fbbf24; }
+  .status-banner.err { background: rgba(220,38,38,0.15); border: 1px solid var(--red); color: #fca5a5; }
+  .status-banner.ok { background: rgba(22,163,74,0.15); border: 1px solid var(--green); color: #86efac; }
+
+  #screen-config { display:none; }
+  #screen-main { display:none; }
+
+  .field { margin-bottom: 14px; }
+  .field label { display:block; font-size:13px; color: var(--text-dim); margin-bottom:6px; }
+  .field input, .field select {
+    width:100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--card-border);
+    background: var(--card); color: var(--text); font-size: 15px;
+  }
+  .field small { display:block; color: var(--text-dim); font-size: 11px; margin-top: 4px; }
+
+  .btn { display:block; width:100%; padding: 14px; border-radius: 14px; border: none; font-size: 15px;
+         font-weight: 600; cursor: pointer; margin-top: 8px; }
+  .btn-primary { background: var(--blue); color: white; }
+  .btn-primary:active { background: var(--blue-dark); }
+  .btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--card-border); }
+  .btn-danger { background: transparent; color: var(--red); border: 1px solid var(--red); }
+
+  .shortcut-list { display:flex; flex-direction:column; gap:6px; margin-bottom: 18px; }
+  .shortcut-row { display:flex; gap:8px; align-items:center; background: var(--card); border:1px solid var(--card-border);
+                  border-radius: 12px; padding: 8px; }
+  .shortcut-row input[type=text] { flex:1; padding:8px 10px; border-radius:8px; border:1px solid var(--card-border);
+                  background:#0f172a; color:var(--text); font-size:13px; }
+  .shortcut-row .emoji-input { width: 52px; text-align:center; flex: 0 0 52px; }
+  .shortcut-row .remove-btn { background:none; border:none; color: var(--red); font-size:18px; padding:4px 8px; cursor:pointer; }
+
+  .cards { display:flex; flex-direction:column; gap:14px; margin-top: 4px; }
+  .task-card {
+    background: var(--card); border: 1px solid var(--card-border); border-radius: 18px; padding: 18px;
+    display:flex; align-items:center; gap:14px; cursor:pointer; transition: transform .08s ease, background .15s ease;
+    user-select:none;
+  }
+  .task-card:active { transform: scale(0.97); background:#243449; }
+  .task-card .emoji { font-size: 32px; width: 48px; text-align:center; }
+  .task-card .info { flex:1; }
+  .task-card .info .label { font-size: 16px; font-weight: 700; }
+  .task-card .info .sub { font-size: 12px; color: var(--text-dim); margin-top:2px; }
+  .task-card .chev { font-size: 22px; color: var(--text-dim); }
+  .task-card.done { opacity: 0.55; }
+  .task-card.loading .chev { animation: spin 0.8s linear infinite; }
+  @keyframes spin { from{ transform: rotate(0deg);} to { transform: rotate(360deg);} }
+
+  .footer-note { margin-top: auto; padding-top: 20px; font-size: 11px; color: var(--text-dim); text-align:center; line-height:1.5; }
+
+  .pending-queue { background: rgba(217,119,6,0.12); border: 1px solid var(--amber); border-radius: 14px; padding: 12px 14px;
+                   margin-bottom: 14px; font-size: 13px; }
+  .pending-queue button { margin-top: 8px; }
+
+  .spinner-overlay { position:fixed; inset:0; background: rgba(15,23,42,0.75); display:none; align-items:center; justify-content:center; z-index: 50; }
+  .spinner-overlay.show { display:flex; }
+  .spinner { width:44px; height:44px; border: 4px solid rgba(255,255,255,0.2); border-top-color: var(--blue); border-radius:50%; animation: spin 0.8s linear infinite; }
+
+  .modal-overlay { position:fixed; inset:0; background: rgba(0,0,0,0.55); display:none; align-items:flex-end; justify-content:center; z-index: 60; }
+  .modal-overlay.show { display:flex; }
+  .modal { background: var(--card); border-radius: 20px 20px 0 0; width:100%; max-width:480px; padding: 22px;
+           border: 1px solid var(--card-border); border-bottom:none; }
+  .modal h3 { margin: 0 0 10px 0; }
+  .modal p { color: var(--text-dim); font-size: 14px; line-height:1.5; }
+  .modal .actions { display:flex; gap:10px; margin-top: 16px; }
+  .modal .actions .btn { margin-top:0; }
+.top-stats{display:flex;justify-content:flex-end;align-items:center;gap:18px;padding:4px 5px 12px;flex-wrap:wrap}.top-stat{display:flex;align-items:center;gap:5px;font-size:14px;font-weight:900}.top-stat .stat-icon{font-size:22px;line-height:1}.top-stat.fire .stat-value{color:#ff9600}.top-stat.star .stat-value{color:#9b5de5}.top-stat.clock .stat-value{color:#2196f3}.top-stat.percent .stat-value{color:#00a878}@media(max-width:420px){.top-stats{justify-content:space-between;gap:8px}.top-stat{font-size:12px}.top-stat .stat-icon{font-size:19px}}</style>
+</head>
+<body>
+
+  <header>
+    <img src="./icons/icon-192.png" alt="" />
+    <div>
+      <h1>Atalho English Journey</h1>
+      <p id="header-sub">toque para marcar como feito</p>
+    </div>
+    <div class="gear" id="btn-open-config">⚙️</div>
+  </header>
+
+  <div id="banner" class="status-banner"></div>
+
+  <div id="pending-queue-box" class="pending-queue" style="display:none;">
+    <div id="pending-queue-text"></div>
+    <button class="btn btn-secondary" id="btn-retry-queue">🔄 Tentar sincronizar agora</button>
+  </div>
+
+  <!-- TELA PRINCIPAL -->
+  <div id="screen-main"><div class="top-stats" id="top-stats"><div class="top-stat fire" title="Sequência atual"><span class="stat-icon">🔥</span><span class="stat-value" id="stat-streak">0</span></div><div class="top-stat star" title="XP acumulado"><span class="stat-icon">⭐</span><span class="stat-value" id="stat-xp">0XP</span></div><div class="top-stat clock" title="Horas concluídas nesta semana"><span class="stat-icon">🕐</span><span class="stat-value" id="stat-week-hours">0.0h</span></div><div class="top-stat percent" title="Taxa de conclusão"><span class="stat-icon">📊</span><span class="stat-value" id="stat-completion">0%</span></div></div>
+    <div class="cards" id="cards-container"></div>
+    <div class="footer-note">
+      Toque em um card para marcar a tarefa pendente mais próxima (atrasada, de hoje, ou a próxima
+      futura com confirmação) como concluída no seu calendário de 6 meses.<br/>
+      Precisa de conexão com a internet para sincronizar com o GitHub.
+    </div>
+  </div>
+
+  <!-- TELA DE CONFIGURAÇÃO -->
+  <div id="screen-config">
+    <div class="field">
+      <label>Token do GitHub (Personal Access Token)</label>
+      <input type="password" id="cfg-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+      <small>Crie um token "fine-grained" com acesso somente ao repositório de dados, permissão de Contents: Read and write. Fica salvo apenas neste aparelho.</small>
+    </div>
+    <div class="field">
+      <label>Repositório (owner/nome)</label>
+      <input type="text" id="cfg-repo" placeholder="seu-usuario/english-dashboard-data" />
+    </div>
+    <div class="field">
+      <label>Branch</label>
+      <input type="text" id="cfg-branch" placeholder="main" value="main" />
+    </div>
+    <div class="field">
+      <label>Caminho do arquivo Excel no repositório</label>
+      <input type="text" id="cfg-path" placeholder="data/estudo_ingles_dados.xlsx" />
+    </div>
+    <div class="field">
+      <label>Seu nome de usuário no English Journey</label>
+      <input type="text" id="cfg-usuario" placeholder="Darlei" />
+      <small>Precisa ser exatamente igual ao nome cadastrado na aba "Usuarios" da planilha.</small>
+    </div>
+
+    <div class="field">
+      <label>Atalhos (o que cada botão procura no calendário)</label>
+      <div class="shortcut-list" id="shortcut-list"></div>
+      <button class="btn btn-secondary" id="btn-add-shortcut" type="button">+ Adicionar atalho</button>
+    </div>
+
+    <button class="btn btn-primary" id="btn-save-config">💾 Salvar configuração</button>
+    <button class="btn btn-secondary" id="btn-cancel-config" style="display:none;">Voltar</button>
+    <button class="btn btn-danger" id="btn-reset-config">Apagar configuração deste aparelho</button>
+  </div>
+
+  <div class="spinner-overlay" id="spinner-overlay"><div class="spinner"></div></div>
+
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <h3 id="modal-title"></h3>
+      <p id="modal-body"></p>
+      <div class="actions">
+        <button class="btn btn-secondary" id="modal-cancel" style="flex:1;">Cancelar</button>
+        <button class="btn btn-primary" id="modal-confirm" style="flex:1;">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+<script src="./app.js"></script>
+</body>
+</html>
