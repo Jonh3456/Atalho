@@ -106,7 +106,24 @@
   .modal p { color: var(--text-dim); font-size: 14px; line-height:1.5; }
   .modal .actions { display:flex; gap:10px; margin-top: 16px; }
   .modal .actions .btn { margin-top:0; }
-.top-stats{display:flex;justify-content:flex-end;align-items:center;gap:18px;padding:4px 5px 12px;flex-wrap:wrap}.top-stat{display:flex;align-items:center;gap:5px;font-size:14px;font-weight:900}.top-stat .stat-icon{font-size:22px;line-height:1}.top-stat.fire .stat-value{color:#ff9600}.top-stat.star .stat-value{color:#9b5de5}.top-stat.clock .stat-value{color:#2196f3}.top-stat.percent .stat-value{color:#00a878}@media(max-width:420px){.top-stats{justify-content:space-between;gap:8px}.top-stat{font-size:12px}.top-stat .stat-icon{font-size:19px}}</style>
+
+  .top-stats { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:4px 4px 14px; }
+  .top-stat { display:flex; align-items:center; gap:4px; font-weight:900; font-size:13px; }
+  .top-stat .stat-icon { font-size:21px; line-height:1; }
+  .top-stat.fire .stat-value { color:#ff9600; } .top-stat.star .stat-value { color:#9b5de5; }
+  .top-stat.clock .stat-value { color:#2196f3; } .top-stat.percent .stat-value { color:#00a878; }
+  .refresh-pendencias { width:100%; display:flex; justify-content:center; gap:7px; padding:10px; margin:0 0 12px;
+    border:1px solid var(--card-border); border-radius:12px; background:rgba(30,41,59,.65); color:var(--text-dim); cursor:pointer; }
+  .refresh-pendencias.loading span { display:inline-block; animation:spin .8s linear infinite; }
+  .pending-status { margin-top:5px; font-size:12px; font-weight:700; }
+  .pending-description { margin-top:3px; color:var(--text-dim); font-size:11px; line-height:1.35; }
+  .task-card.atrasada { border-left:4px solid #ef4444; } .task-card.atrasada .pending-status { color:#fca5a5; }
+  .task-card.hoje { border-left:4px solid #f59e0b; } .task-card.hoje .pending-status { color:#fbbf24; }
+  .task-card.futura { border-left:4px solid #3b82f6; } .task-card.futura .pending-status { color:#93c5fd; }
+  .task-card.sem-pendencia { border-left:4px solid #22c55e; opacity:.82; } .task-card.sem-pendencia .pending-status { color:#86efac; }
+  .task-card.erro-consulta { border-left:4px solid #64748b; }
+
+</style>
 </head>
 <body>
 
@@ -127,7 +144,14 @@
   </div>
 
   <!-- TELA PRINCIPAL -->
-  <div id="screen-main"><div class="top-stats" id="top-stats"><div class="top-stat fire" title="Sequência atual"><span class="stat-icon">🔥</span><span class="stat-value" id="stat-streak">0</span></div><div class="top-stat star" title="XP acumulado"><span class="stat-icon">⭐</span><span class="stat-value" id="stat-xp">0XP</span></div><div class="top-stat clock" title="Horas concluídas nesta semana"><span class="stat-icon">🕐</span><span class="stat-value" id="stat-week-hours">0.0h</span></div><div class="top-stat percent" title="Taxa de conclusão"><span class="stat-icon">📊</span><span class="stat-value" id="stat-completion">0%</span></div></div>
+  <div id="screen-main">
+    <div class="top-stats" id="top-stats">
+      <div class="top-stat fire" title="Sequência atual"><span class="stat-icon">🔥</span><span class="stat-value" id="stat-streak">...</span></div>
+      <div class="top-stat star" title="XP acumulado"><span class="stat-icon">⭐</span><span class="stat-value" id="stat-xp">...XP</span></div>
+      <div class="top-stat clock" title="Horas nesta semana"><span class="stat-icon">🕐</span><span class="stat-value" id="stat-week-hours">...h</span></div>
+      <div class="top-stat percent" title="Taxa de conclusão"><span class="stat-icon">📊</span><span class="stat-value" id="stat-completion">...%</span></div>
+    </div>
+    <button class="refresh-pendencias" id="btn-refresh-pendencias" type="button"><span>🔄</span> Atualizar painel</button>
     <div class="cards" id="cards-container"></div>
     <div class="footer-note">
       Toque em um card para marcar a tarefa pendente mais próxima (atrasada, de hoje, ou a próxima

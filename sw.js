@@ -4,7 +4,7 @@
 // gravação em si (GitHub API) sempre precisa de internet, mas a interface
 // abre offline normalmente.
 
-const CACHE_NAME = "ej-atalho-v1";
+const CACHE_NAME = "ej-atalho-v4";
 const ASSETS = [
   "./",
   "./index.html",

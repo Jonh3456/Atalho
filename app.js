@@ -319,6 +319,7 @@ async function performMark(shortcut, opts = {}) {
           showBanner("ok", `✅ "${shortcut.label}" marcado como concluído (referente a ${formatBR(alvo.dataISO)}).`);
           vibrate();
         }
+        await carregarPainel();
         return { ok: true, date: alvo.dataISO };
       } catch (e) {
         if (e && e.conflict) continue; // outra gravação aconteceu ao mesmo tempo — tenta de novo
@@ -345,6 +346,131 @@ async function performMark(shortcut, opts = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// Painel: indicadores e prévia das tarefas pendentes
+// ---------------------------------------------------------------------------
+function dateFromISO(iso) {
+  const parts = String(iso || "").slice(0, 10).split("-").map(Number);
+  if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+  return new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+}
+
+function localISOFromDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function calcularIndicadores(rows, usuario) {
+  const doUsuario = rows.filter((r) => String(r["Usuario"] ?? "").trim() === usuario.trim());
+  const concluidas = doUsuario.filter((r) => isTrue(r["Concluido"]));
+
+  const minutosReais = (r) => {
+    const executados = Number(r["MinutosExecutados"] || 0);
+    const planejados = Number(r["MinutosPlanejados"] || 0);
+    return executados > 0 ? executados : planejados;
+  };
+
+  const totalMinutos = concluidas.reduce((acc, r) => acc + minutosReais(r), 0);
+  const xp = Math.round(totalMinutos / 5);
+  const taxa = doUsuario.length ? (concluidas.length / doUsuario.length) * 100 : 0;
+
+  const hoje = dateFromISO(todayISOLocal());
+  const diaSemana = hoje.getDay();
+  const segunda = new Date(hoje);
+  segunda.setDate(hoje.getDate() + (diaSemana === 0 ? -6 : 1 - diaSemana));
+  const domingo = new Date(segunda);
+  domingo.setDate(segunda.getDate() + 6);
+  const inicioSemana = localISOFromDate(segunda);
+  const fimSemana = localISOFromDate(domingo);
+  const minutosSemana = concluidas
+    .filter((r) => {
+      const data = toISODate(r["Data"]);
+      return data >= inicioSemana && data <= fimSemana;
+    })
+    .reduce((acc, r) => acc + minutosReais(r), 0);
+
+  const datas = [...new Set(concluidas.map((r) => toISODate(r["Data"])).filter(Boolean))].sort().reverse();
+  let sequencia = 0;
+  if (datas.length) {
+    sequencia = 1;
+    let anterior = dateFromISO(datas[0]);
+    for (let i = 1; i < datas.length; i++) {
+      const atual = dateFromISO(datas[i]);
+      if (anterior && atual && Math.round((anterior - atual) / 86400000) === 1) {
+        sequencia += 1;
+        anterior = atual;
+      } else break;
+    }
+  }
+  return { sequencia, xp, horasSemana: minutosSemana / 60, taxa };
+}
+
+function renderIndicadores(rows) {
+  const s = calcularIndicadores(rows, CFG.usuario);
+  $("#stat-streak").textContent = String(s.sequencia);
+  $("#stat-xp").textContent = `${s.xp}XP`;
+  $("#stat-week-hours").textContent = `${s.horasSemana.toFixed(1)}h`;
+  $("#stat-completion").textContent = `${s.taxa.toFixed(0)}%`;
+}
+
+function statusDaPendencia(alvo, hoje) {
+  if (!alvo) return { classe: "sem-pendencia", texto: "✅ Nenhuma atividade pendente" };
+  if (alvo.dataISO < hoje) return { classe: "atrasada", texto: `🔴 Atrasada desde ${formatBR(alvo.dataISO)}` };
+  if (alvo.dataISO === hoje) return { classe: "hoje", texto: "🟡 Pendente para hoje" };
+  return { classe: "futura", texto: `🔵 Próxima: ${formatBR(alvo.dataISO)}` };
+}
+
+function descricaoDaPendencia(row, fallback) {
+  const tarefa = String(row?.["Tarefa"] ?? "").trim();
+  const modalidade = String(row?.["Modalidade"] ?? "").trim();
+  const horario = String(row?.["Horario"] ?? "").trim();
+  const minutos = Number(row?.["MinutosPlanejados"] || 0);
+  const partes = [];
+  if (tarefa) partes.push(tarefa);
+  if (modalidade && modalidade.toLowerCase() !== tarefa.toLowerCase()) partes.push(modalidade);
+  if (horario) partes.push(horario);
+  if (minutos) partes.push(`${minutos} min`);
+  return partes.join(" • ") || fallback;
+}
+
+async function carregarPainel() {
+  if (!CFG || !configIsComplete(CFG)) return;
+  const btn = $("#btn-refresh-pendencias");
+  if (btn) { btn.disabled = true; btn.classList.add("loading"); }
+  try {
+    const { bytes } = await ghFetchFile(CFG);
+    const wb = XLSX.read(bytes, { type: "array", cellDates: true });
+    if (!wb.SheetNames.includes("Atividades")) throw new Error('A aba "Atividades" não foi encontrada.');
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets["Atividades"], { defval: "" });
+    const hoje = todayISOLocal();
+    renderIndicadores(rows);
+
+    CFG.shortcuts.forEach((shortcut) => {
+      const alvo = selecionarAlvo(rows, CFG.usuario, shortcut.keyword, hoje);
+      const status = statusDaPendencia(alvo, hoje);
+      const card = document.getElementById(`card-${shortcut.id}`);
+      const statusEl = document.getElementById(`status-${shortcut.id}`);
+      const descEl = document.getElementById(`descricao-${shortcut.id}`);
+      card?.classList.remove("atrasada", "hoje", "futura", "sem-pendencia", "erro-consulta");
+      card?.classList.add(status.classe);
+      if (statusEl) statusEl.textContent = status.texto;
+      if (descEl) descEl.textContent = alvo ? descricaoDaPendencia(alvo.row, shortcut.label) : "Todas as atividades foram concluídas";
+    });
+  } catch (err) {
+    CFG.shortcuts.forEach((shortcut) => {
+      const card = document.getElementById(`card-${shortcut.id}`);
+      const statusEl = document.getElementById(`status-${shortcut.id}`);
+      const descEl = document.getElementById(`descricao-${shortcut.id}`);
+      card?.classList.remove("atrasada", "hoje", "futura", "sem-pendencia");
+      card?.classList.add("erro-consulta");
+      if (statusEl) statusEl.textContent = "⚠️ Não foi possível consultar";
+      if (descEl) descEl.textContent = navigator.onLine ? "Confira a configuração e toque em Atualizar" : "Sem conexão com a internet";
+    });
+    showBanner("err", `Erro ao carregar o painel: ${err.message}`, 0);
+  } finally {
+    if (btn) { btn.disabled = false; btn.classList.remove("loading"); }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Renderização da tela principal
 // ---------------------------------------------------------------------------
 function renderMainScreen() {
@@ -355,7 +481,8 @@ function renderMainScreen() {
       <div class="emoji">${escapeHtml(s.emoji)}</div>
       <div class="info">
         <div class="label">${escapeHtml(s.label)}</div>
-        <div class="sub">toque para marcar como feito</div>
+        <div class="pending-status" id="status-${s.id}">Consultando pendência...</div>
+        <div class="pending-description" id="descricao-${s.id}"></div>
       </div>
       <div class="chev">›</div>
     </div>
@@ -367,6 +494,7 @@ function renderMainScreen() {
     });
   });
   renderQueueBanner();
+  carregarPainel();
 }
 
 // ---------------------------------------------------------------------------
@@ -450,6 +578,7 @@ function bindConfigEvents() {
   $("#btn-cancel-config").addEventListener("click", () => showMainScreen());
 
   $("#btn-retry-queue").addEventListener("click", () => processQueue());
+  $("#btn-refresh-pendencias").addEventListener("click", () => carregarPainel());
 
   $("#btn-reset-config").addEventListener("click", async () => {
     const ok = await askConfirm("Apagar configuração?", "Isso remove o token e as preferências salvas neste aparelho. Você precisará configurar novamente.");
@@ -481,4 +610,7 @@ function init() {
   }
 }
 
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && CFG && configIsComplete(CFG)) carregarPainel();
+});
 document.addEventListener("DOMContentLoaded", init);
